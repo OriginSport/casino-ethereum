@@ -9,8 +9,8 @@ contract Casino is Ownable, Signable {
   uint constant HOUSE_EDGE_PERCENT = 2;
   uint constant HOUSE_EDGE_MINIMUM_AMOUNT = 0.0003 ether;
 
-  uint constant MIN_BET = 0.01 ether;
-  uint constant MAX_AMOUNT = 1000 ether;
+  uint constant BET_AMOUNT_MIN = 0.01 ether;
+  uint constant BET_AMOUNT_MAX = 1000 ether;
 
   uint constant BET_EXPIRATION_BLOCKS = 250;
 
@@ -20,7 +20,7 @@ contract Casino is Ownable, Signable {
     uint8 choice;
     uint8 modulo;
     uint  amount;
-    uint  rewardAmount;
+    uint  winAmount;
     uint  placeBlockNumber;
     address player;
   }
@@ -34,7 +34,7 @@ contract Casino is Ownable, Signable {
   }
 
   function placeBet(uint _choice, uint _modulo, uint _expiredBlockNumber) payable external {
-    Bet bet = bets[betNonce];
+    Bet storage bet = bets[betNonce];
 
     uint amount = msg.value;
 
@@ -47,9 +47,11 @@ contract Casino is Ownable, Signable {
       houseEdge = HOUSE_EDGE_MINIMUM_AMOUNT;
     }
 
-    winAmount = (amount - houseEdge) * modulo;
+    uint winAmount = (amount - houseEdge) * _modulo;
 
-    bet.choice = _choice
+    require(winAmount <= address(this).balance, 'contract balance is not enough');
+
+    bet.choice = uint8(_choice);
     bet.player = msg.sender;
     bet.placeBlockNumber = block.number;
     bet.amount = amount;
@@ -60,7 +62,7 @@ contract Casino is Ownable, Signable {
   }
 
   function closeBet(uint _betNonce) external onlyOwner {
-    Bet bet = bets[_betNonce];
+    Bet storage bet = bets[_betNonce];
 
     uint placeBlockNumber = bet.placeBlockNumber;
     uint modulo = bet.modulo;
@@ -71,7 +73,7 @@ contract Casino is Ownable, Signable {
     require (block.number > placeBlockNumber, 'close bet block number is too low');
     require (block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
 
-    uint result = uint(keccak256(now)) % modulo;
+    uint result = uint(keccak256(abi.encodePacked(now))) % modulo;
 
     if (choice == result) {
       player.transfer(winAmount);
@@ -80,8 +82,9 @@ contract Casino is Ownable, Signable {
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
-    Bet bet = bets[_betNonce];
+    Bet storage bet = bets[_betNonce];
 
+    uint placeBlockNumber = bet.placeBlockNumber;
     uint amount = bet.amount;
     address player = bet.player;
 
