@@ -28,7 +28,7 @@ contract Signable {
 
   /**
    * @dev Allows the current signer to transfer control of the contract to a newSigner
-   * @param newSigner The address to transfer signership to
+   * @param _newSigner The address to transfer signership to
    */
   function transferSignership(address _newSigner) public onlySigner {
     _transferSignership(_newSigner);
