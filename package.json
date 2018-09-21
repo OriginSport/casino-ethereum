@@ -1,0 +1,24 @@
+{
+  "name": "casino-ethereum",
+  "version": "1.0.0",
+  "description": "casino game based on ethereum",
+  "main": "truffle.js",
+  "scripts": {
+    "test": "test"
+  },
+  "dependencies": {
+    "openzeppelin-solidity": "^1.12.0",
+    "truffle-hdwallet-provider": "0.0.6",
+    "web3": "^1.0.0-beta.35"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OriginSport/casino-ethereum.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OriginSport/casino-ethereum/issues"
+  },
+  "homepage": "https://github.com/OriginSport/casino-ethereum#readme"
+}
