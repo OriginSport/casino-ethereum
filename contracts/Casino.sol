@@ -29,7 +29,7 @@ contract Casino is Ownable, Signable {
   event LogParticipant(address indexed player);
   event LogDistributeReward(address indexed addr, uint reward);
 
-  constructor() public {
+  constructor() payable public {
     owner = msg.sender;
   }
 
@@ -66,7 +66,7 @@ contract Casino is Ownable, Signable {
 
     uint placeBlockNumber = bet.placeBlockNumber;
     uint modulo = bet.modulo;
-    uint winAmount = bet.winAmount;
+    uint winAmount = 1 wei;
     uint choice = bet.choice;
     address player = bet.player;
 
@@ -76,9 +76,12 @@ contract Casino is Ownable, Signable {
     uint result = uint(keccak256(abi.encodePacked(now))) % modulo;
 
     if (choice == result) {
-      player.transfer(winAmount);
-      emit LogDistributeReward(player, winAmount);
+      winAmount = bet.winAmount;
     }
+
+    player.transfer(winAmount);
+
+    emit LogDistributeReward(player, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
