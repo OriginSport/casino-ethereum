@@ -28,6 +28,7 @@ contract Casino is Ownable, Signable {
 
   event LogParticipant(address indexed player);
   event LogDistributeReward(address indexed addr, uint reward);
+  event LogRecharge(address indexed addr, uint amount);
 
   constructor() public {
     owner = msg.sender;
@@ -92,5 +93,13 @@ contract Casino is Ownable, Signable {
 
     player.transfer(amount);
   }
+
+  /**
+   * @dev in order to let more people participant
+   */
+  function recharge() public payable {
+    emit LogRecharge(msg.sender, msg.value);
+  }
+
 }
  
