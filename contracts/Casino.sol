@@ -29,7 +29,7 @@ contract Casino is Ownable, Signable {
   event LogParticipant(address indexed player);
   event LogDistributeReward(address indexed addr, uint reward);
 
-  constructor() public {
+  constructor() payable public {
     owner = msg.sender;
   }
 
