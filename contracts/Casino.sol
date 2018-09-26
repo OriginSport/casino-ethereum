@@ -26,7 +26,7 @@ contract Casino is Ownable, Signable {
   }
   mapping (uint => Bet) bets;
 
-  event LogParticipant(address indexed player, uint choice, uint betNonce);
+  event LogParticipant(address indexed player, uint choice, uint amount, uint betNonce);
   event LogClosedBet(address indexed player, uint choice, uint betNonce, uint result, uint winAmount);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
@@ -60,7 +60,7 @@ contract Casino is Ownable, Signable {
     bet.winAmount = winAmount;
     bet.modulo = uint8(_modulo);
 
-    emit LogParticipant(msg.sender, _choice, betNonce);
+    emit LogParticipant(msg.sender, _choice, msg.value, betNonce);
     betNonce += 1;
   }
 
