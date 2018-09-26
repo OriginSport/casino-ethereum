@@ -26,8 +26,10 @@ contract Casino is Ownable, Signable {
   }
   mapping (uint => Bet) bets;
 
-  event LogParticipant(address indexed player);
+  event LogParticipant(address indexed player, uint choice, uint betNonce);
+  event LogClosedBet(address indexed player, uint choice, uint betNonce, uint result, uint winAmount);
   event LogDistributeReward(address indexed addr, uint reward);
+  event LogRecharge(address indexed addr, uint amount);
 
   constructor() payable public {
     owner = msg.sender;
@@ -58,6 +60,7 @@ contract Casino is Ownable, Signable {
     bet.winAmount = winAmount;
     bet.modulo = uint8(_modulo);
 
+    emit LogParticipant(msg.sender, _choice, betNonce);
     betNonce += 1;
   }
 
@@ -66,7 +69,7 @@ contract Casino is Ownable, Signable {
 
     uint placeBlockNumber = bet.placeBlockNumber;
     uint modulo = bet.modulo;
-    uint winAmount = 1 wei;
+    uint winAmount = 0;
     uint choice = bet.choice;
     address player = bet.player;
 
@@ -77,11 +80,10 @@ contract Casino is Ownable, Signable {
 
     if (choice == result) {
       winAmount = bet.winAmount;
+      player.transfer(winAmount);
+      emit LogDistributeReward(player, winAmount);
     }
-
-    player.transfer(winAmount);
-
-    emit LogDistributeReward(player, winAmount);
+    emit LogClosedBet(bet.player, bet.choice, _betNonce, result, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
@@ -94,6 +96,21 @@ contract Casino is Ownable, Signable {
     require (block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
 
     player.transfer(amount);
+  }
+
+  /**
+   * @dev in order to let more people participant
+   */
+  function recharge() public payable {
+    emit LogRecharge(msg.sender, msg.value);
+  }
+ 
+  /**
+   * @dev owner can withdraw the remain ether
+   */
+  function withdraw() external onlyOwner {
+    uint _balance = address(this).balance;
+    owner.transfer(_balance);
   }
 }
  
