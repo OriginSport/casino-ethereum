@@ -64,17 +64,22 @@ contract Casino is Ownable, Signable {
     betNonce += 1;
   }
 
-  function closeBet(uint _betNonce) external onlyOwner {
+  function closeBet(uint _betNonce) external {
     Bet storage bet = bets[_betNonce];
 
+    uint amount = bet.amount;
     uint placeBlockNumber = bet.placeBlockNumber;
     uint modulo = bet.modulo;
     uint winAmount = 0;
     uint choice = bet.choice;
     address player = bet.player;
 
+    require (amount > 0, 'this bet is not active');
     require (block.number > placeBlockNumber, 'close bet block number is too low');
     require (block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
+
+    // close this bet and set bet.amount to zero
+    bet.amount = 0;
 
     uint result = uint(keccak256(abi.encodePacked(now))) % modulo;
 
@@ -83,7 +88,7 @@ contract Casino is Ownable, Signable {
       player.transfer(winAmount);
       emit LogDistributeReward(player, winAmount);
     }
-    emit LogClosedBet(bet.player, bet.choice, _betNonce, result, winAmount);
+    emit LogClosedBet(player, choice, _betNonce, result, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
