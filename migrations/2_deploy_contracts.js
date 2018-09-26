@@ -1,5 +1,5 @@
 const Casino = artifacts.require('Casino.sol')
 
 module.exports = function(deployer) {
-  deployer.deploy(Casino)
+  deployer.deploy(Casino, { value: 5e17 })
 }
