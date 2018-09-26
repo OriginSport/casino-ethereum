@@ -1,4 +1,4 @@
-const {web3, property, sendSignedTx, sendSignedTxSimple} = require('./contractUtil.js')
+const {web3, property, sendSignedTx, sendSignedTxSimple, evmMine} = require('./contractUtil.js')
 
 
 const contractJson = require('../build/contracts/Casino.json')
@@ -23,6 +23,11 @@ async function closeBet(betNonce) {
   await sendSignedTxSimple(contractAddr, data)
 }
 
+async function refundBet(betNonce) {
+  const data = contract.methods.refundBet(betNonce).encodeABI()
+  return await sendSignedTxSimple(contractAddr, data)
+}
+
 async function test() {
 
   const contBan = await web3.eth.getBalance(contractAddr)
@@ -39,16 +44,26 @@ async function test() {
   const modulo = '2'
   const expiredBlockNumber = await web3.eth.getBlockNumber() + 200
 
-  await placeBet(value, choice, modulo, expiredBlockNumber)
+  // await placeBet(value, choice, modulo, expiredBlockNumber)
 
-  await closeBet(0).then(tx => {
-    console.log(tx.logs)
-  })
+  // await closeBet(0).then(tx => {
+  //   console.log(tx)
+  // })
 
-  // await web3.eth.getTransactionReceipt('0x2bfb9e4d8cd69baa88f572416a7227af7a22e67e455c6ed2d7fec878d33745fc')
+  // await refundBet(1).then(tx => {
+  //   console.log(tx.logs)
+  // })
+
+  // for (let i = 0; i < 200; i++) {
+  //   await evmMine()
+  // }
+
+  // await web3.eth.getTransactionReceipt('0x14ca84739100d5af49388e3936e25a3ed0fdf1b10493a9afc57eb2aa9f0b9faa')
   //     .then(tx => {
   //         console.log(tx.logs)
   //     })
+
+
 }
 
 test()
