@@ -30,6 +30,7 @@ contract Casino is Ownable, Signable {
   event LogClosedBet(address indexed player, uint choice, uint betNonce, uint result, uint winAmount);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
+  event LogRefund(address indexed addr, uint amount);
 
   constructor() payable public {
     owner = msg.sender;
@@ -94,13 +95,16 @@ contract Casino is Ownable, Signable {
   function refundBet(uint _betNonce) external onlyOwner {
     Bet storage bet = bets[_betNonce];
 
-    uint placeBlockNumber = bet.placeBlockNumber;
     uint amount = bet.amount;
     address player = bet.player;
 
-    require (block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
+    require(amount > 0, 'bet amount should greater than 0');
 
+    // refund bet amount and set bet.amount to 0
+    bet.amount = 0;
     player.transfer(amount);
+
+    emit LogRefund(player, amount);
   }
 
   /**
