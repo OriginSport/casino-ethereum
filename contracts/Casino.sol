@@ -105,5 +105,12 @@ contract Casino is Ownable, Signable {
     emit LogRecharge(msg.sender, msg.value);
   }
  
+  /**
+   * @dev owner can withdraw the remain ether
+   */
+  function withdraw() external onlyOwner {
+    uint _balance = address(this).balance;
+    owner.transfer(_balance);
+  }
 }
  
