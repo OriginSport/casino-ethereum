@@ -60,7 +60,7 @@ contract Casino is Ownable, Signable {
     bet.winAmount = winAmount;
     bet.modulo = uint8(_modulo);
 
-    LogParticipant(msg.sender, _choice, betNonce);
+    emit LogParticipant(msg.sender, _choice, betNonce);
     betNonce += 1;
   }
 
@@ -83,7 +83,7 @@ contract Casino is Ownable, Signable {
       player.transfer(winAmount);
       emit LogDistributeReward(player, winAmount);
     }
-    emit LogCloseBet(bet.player, bet.choice, _betNonce, result, winAmount);
+    emit LogClosedBet(bet.player, bet.choice, _betNonce, result, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
