@@ -5,6 +5,7 @@ import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 import './Signable.sol';
 
 contract Casino is Ownable, Signable {
+  using SafeMath for uint;
 
   uint constant HOUSE_EDGE_PERCENT = 2;
   uint constant HOUSE_EDGE_MINIMUM_AMOUNT = 0.0003 ether;
@@ -14,7 +15,6 @@ contract Casino is Ownable, Signable {
 
   uint constant BET_EXPIRATION_BLOCKS = 250;
 
-  uint public betNonce = 0;
   uint public deposit;
 
   struct Bet {
@@ -37,13 +37,18 @@ contract Casino is Ownable, Signable {
     owner = msg.sender;
   }
 
-  function placeBet(uint _choice, uint _modulo, uint _expiredBlockNumber) payable external {
-    Bet storage bet = bets[betNonce];
+  function placeBet(uint _choice, uint _modulo, uint _expiredBlockNumber, uint _commit, uint8 _v, bytes32 _r, bytes32 _s) payable external {
+    Bet storage bet = bets[_commit];
 
     uint amount = msg.value;
 
+    require(bet.player == address(0), "this bet is already exist");
     require(block.number < _expiredBlockNumber, 'this bet has expired');
     require(amount > BET_AMOUNT_MIN && amount < BET_AMOUNT_MAX, 'bet amount out of range');
+
+    // verify the signer and _expiredBlockNumber
+    bytes32 msgHash = keccak256(abi.encodePacked(_expiredBlockNumber, _commit));
+    require(ecrecover(msgHash, _v, _r, _s) == signer, "incorrect signer");
 
     uint houseEdge = amount * HOUSE_EDGE_PERCENT / 100;
     if (houseEdge < HOUSE_EDGE_MINIMUM_AMOUNT) {
@@ -51,11 +56,10 @@ contract Casino is Ownable, Signable {
     }
 
     uint winAmount = (amount - houseEdge) * _modulo;
-
-    require(winAmount <= address(this).balance, 'contract balance is not enough');
-
     // deposit winAmount into this contract. Make sure contract is solvent
-    deposit += winAmount;
+    deposit = deposit.add(winAmount);
+
+    require(deposit <= address(this).balance, 'contract balance is not enough');
 
     bet.choice = uint8(_choice);
     bet.player = msg.sender;
@@ -64,13 +68,11 @@ contract Casino is Ownable, Signable {
     bet.winAmount = winAmount;
     bet.modulo = uint8(_modulo);
 
-    emit LogParticipant(msg.sender, _choice, betNonce);
-
-    betNonce++;
+    emit LogParticipant(msg.sender, _choice, _commit);
   }
 
-  function closeBet(uint _betNonce) external {
-    Bet storage bet = bets[_betNonce];
+  function closeBet(uint _reveal) external {
+    Bet storage bet = bets[_reveal];
 
     uint amount = bet.amount;
     uint placeBlockNumber = bet.placeBlockNumber;
@@ -79,14 +81,14 @@ contract Casino is Ownable, Signable {
     uint choice = bet.choice;
     address player = bet.player;
 
-    require (amount > 0, 'this bet is not active');
-    require (block.number > placeBlockNumber, 'close bet block number is too low');
-    require (block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
+    require(amount > 0, 'this bet is not active');
+    require(block.number > placeBlockNumber, 'close bet block number is too low');
+    require(block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
 
     // close this bet and set bet.amount to zero
     bet.amount = 0;
 
-    uint result = uint(keccak256(abi.encodePacked(now))) % modulo;
+    uint result = uint(keccak256(abi.encodePacked(_reveal, blockhash(placeBlockNumber)))) % modulo;
 
     if (choice == result) {
       winAmount = bet.winAmount;
@@ -96,7 +98,7 @@ contract Casino is Ownable, Signable {
     // release winAmount deposit
     deposit -= bet.winAmount;
 
-    emit LogClosedBet(player, choice, _betNonce, result, winAmount);
+    emit LogClosedBet(player, choice, _reveal, result, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
