@@ -1,4 +1,5 @@
 # Casino Ethereum
+1
 
 This is a smart contract about a casino game contract based on ethereum
 
