@@ -15,6 +15,7 @@ contract Casino is Ownable, Signable {
   uint constant BET_EXPIRATION_BLOCKS = 250;
 
   uint public betNonce = 0;
+  uint public deposit;
 
   struct Bet {
     uint8 choice;
@@ -45,7 +46,6 @@ contract Casino is Ownable, Signable {
     require(amount > BET_AMOUNT_MIN && amount < BET_AMOUNT_MAX, 'bet amount out of range');
 
     uint houseEdge = amount * HOUSE_EDGE_PERCENT / 100;
-
     if (houseEdge < HOUSE_EDGE_MINIMUM_AMOUNT) {
       houseEdge = HOUSE_EDGE_MINIMUM_AMOUNT;
     }
@@ -53,6 +53,9 @@ contract Casino is Ownable, Signable {
     uint winAmount = (amount - houseEdge) * _modulo;
 
     require(winAmount <= address(this).balance, 'contract balance is not enough');
+
+    // deposit winAmount into this contract. Make sure contract is solvent
+    deposit += winAmount;
 
     bet.choice = uint8(_choice);
     bet.player = msg.sender;
@@ -62,7 +65,8 @@ contract Casino is Ownable, Signable {
     bet.modulo = uint8(_modulo);
 
     emit LogParticipant(msg.sender, _choice, betNonce);
-    betNonce += 1;
+
+    betNonce++;
   }
 
   function closeBet(uint _betNonce) external {
@@ -89,6 +93,9 @@ contract Casino is Ownable, Signable {
       player.transfer(winAmount);
       emit LogDistributeReward(player, winAmount);
     }
+    // release winAmount deposit
+    deposit -= bet.winAmount;
+
     emit LogClosedBet(player, choice, _betNonce, result, winAmount);
   }
 
@@ -103,6 +110,8 @@ contract Casino is Ownable, Signable {
     // refund bet amount and set bet.amount to 0
     bet.amount = 0;
     player.transfer(amount);
+    // release winAmount deposit
+    deposit -= bet.winAmount;
 
     emit LogRefund(player, amount);
   }
@@ -113,13 +122,14 @@ contract Casino is Ownable, Signable {
   function recharge() public payable {
     emit LogRecharge(msg.sender, msg.value);
   }
- 
+
   /**
    * @dev owner can withdraw the remain ether
    */
-  function withdraw() external onlyOwner {
-    uint _balance = address(this).balance;
-    owner.transfer(_balance);
+  function withdraw(uint amount) external onlyOwner {
+    require(amount <= address(this).balance - deposit, 'cannot withdraw amount greater than (balance - deposit)');
+
+    owner.transfer(amount);
   }
 }
  
