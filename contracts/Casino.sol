@@ -24,11 +24,13 @@ contract Casino is Ownable, HouseAdmin {
     uint  winAmount;
     uint  placeBlockNumber;
     address player;
+    bool isActive;
   }
+
   mapping (uint => Bet) bets;
 
-  event LogParticipant(address indexed player, uint choice, uint amount, uint betNonce);
-  event LogClosedBet(address indexed player, uint choice, uint betNonce, uint result, uint winAmount);
+  event LogParticipant(address indexed player, uint indexed modulo, uint choice, uint amount, uint commit);
+  event LogClosedBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
   event LogRefund(address indexed addr, uint amount);
@@ -66,18 +68,19 @@ contract Casino is Ownable, HouseAdmin {
     bet.placeBlockNumber = block.number;
     bet.amount = amount;
     bet.winAmount = winAmount;
+    bet.isActive = true;
     bet.modulo = uint8(_modulo);
 
-<<<<<<< HEAD
-    emit LogParticipant(msg.sender, _choice, msg.value, betNonce);
-    betNonce += 1;
-=======
-    emit LogParticipant(msg.sender, _choice, _commit);
->>>>>>> bingo-ver
+    emit LogParticipant(msg.sender, _modulo, _choice, amount, _commit);
   }
 
-  function closeBet(uint _reveal) external {
-    Bet storage bet = bets[_reveal];
+  function closeBet(uint _reveal) external onlyCroupier {
+
+
+    uint commit = uint(keccak256(abi.encodePacked(_reveal)));
+    Bet storage bet = bets[commit];
+
+    require(bet.isActive, 'this bet is not active');
 
     uint amount = bet.amount;
     uint placeBlockNumber = bet.placeBlockNumber;
@@ -86,7 +89,6 @@ contract Casino is Ownable, HouseAdmin {
     uint choice = bet.choice;
     address player = bet.player;
 
-    require(amount > 0, 'this bet is not active');
     require(block.number > placeBlockNumber, 'close bet block number is too low');
     require(block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
 
@@ -103,7 +105,8 @@ contract Casino is Ownable, HouseAdmin {
     // release winAmount deposit
     deposit -= bet.winAmount;
 
-    emit LogClosedBet(player, choice, _reveal, result, winAmount);
+    bet.isActive = false;
+    emit LogClosedBet(player, modulo, choice, _reveal, result, amount, winAmount);
   }
 
   function refundBet(uint _betNonce) external onlyOwner {
