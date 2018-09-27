@@ -2,9 +2,9 @@ pragma solidity ^0.4.24;
 
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
-import './Signable.sol';
+import './HouseAdmin.sol';
 
-contract Casino is Ownable, Signable {
+contract Casino is Ownable, HouseAdmin {
 
   uint constant HOUSE_EDGE_PERCENT = 2;
   uint constant HOUSE_EDGE_MINIMUM_AMOUNT = 0.0003 ether;
