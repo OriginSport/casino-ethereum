@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
 /**
- * @title Signable
- * @dev The Signable contract has an signer address, and provides basic authorization control
+ * @title HouseAdmin
+ * @dev The HouseAdmin contract has a signer address and a croupier address, and provides basic authorization control
  *      functions, this simplifies the implementation of "user permissions"
  */
 contract HouseAdmin is Ownable {
