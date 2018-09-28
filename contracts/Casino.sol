@@ -45,8 +45,8 @@ contract Casino is Ownable, HouseAdmin {
     uint amount = msg.value;
 
     require(bet.player == address(0), "this bet is already exist");
-    require(block.number < _expiredBlockNumber, 'this bet has expired');
-    require(amount > BET_AMOUNT_MIN && amount < BET_AMOUNT_MAX, 'bet amount out of range');
+    require(block.number <= _expiredBlockNumber, 'this bet has expired');
+    require(amount >= BET_AMOUNT_MIN && amount <= BET_AMOUNT_MAX, 'bet amount out of range');
 
     // verify the signer and _expiredBlockNumber
     bytes32 msgHash = keccak256(abi.encodePacked(_expiredBlockNumber, _commit));
