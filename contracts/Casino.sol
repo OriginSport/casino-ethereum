@@ -15,7 +15,7 @@ contract Casino is Ownable, HouseAdmin {
 
   uint constant BET_EXPIRATION_BLOCKS = 250;
 
-  uint public deposit;
+  uint public bankFund;
 
   struct Bet {
     uint8 choice;
@@ -58,10 +58,10 @@ contract Casino is Ownable, HouseAdmin {
     }
 
     uint winAmount = (amount - houseEdge) * _modulo;
-    // deposit winAmount into this contract. Make sure contract is solvent
-    deposit = deposit.add(winAmount);
+    // lock winAmount into this contract. Make sure contract is solvent
+    bankFund = bankFund.add(winAmount);
 
-    require(deposit <= address(this).balance, 'contract balance is not enough');
+    require(bankFund <= address(this).balance, 'contract balance is not enough');
 
     bet.choice = uint8(_choice);
     bet.player = msg.sender;
@@ -75,8 +75,6 @@ contract Casino is Ownable, HouseAdmin {
   }
 
   function closeBet(uint _reveal) external onlyCroupier {
-
-
     uint commit = uint(keccak256(abi.encodePacked(_reveal)));
     Bet storage bet = bets[commit];
 
@@ -92,9 +90,6 @@ contract Casino is Ownable, HouseAdmin {
     require(block.number > placeBlockNumber, 'close bet block number is too low');
     require(block.number <= placeBlockNumber + BET_EXPIRATION_BLOCKS, 'the block number is too low to query');
 
-    // close this bet and set bet.amount to zero
-    bet.amount = 0;
-
     uint result = uint(keccak256(abi.encodePacked(_reveal, blockhash(placeBlockNumber)))) % modulo;
 
     if (choice == result) {
@@ -103,25 +98,24 @@ contract Casino is Ownable, HouseAdmin {
       emit LogDistributeReward(player, winAmount);
     }
     // release winAmount deposit
-    deposit -= bet.winAmount;
-
+    bankFund -= bet.winAmount;
     bet.isActive = false;
+
     emit LogClosedBet(player, modulo, choice, _reveal, result, amount, winAmount);
   }
 
-  function refundBet(uint _betNonce) external onlyOwner {
-    Bet storage bet = bets[_betNonce];
+  function refundBet(uint _commit) external onlyCroupier {
+    Bet storage bet = bets[_commit];
 
     uint amount = bet.amount;
     address player = bet.player;
 
-    require(amount > 0, 'bet amount should greater than 0');
+    require(bet.isActive, 'this bet is not active');
 
-    // refund bet amount and set bet.amount to 0
-    bet.amount = 0;
     player.transfer(amount);
     // release winAmount deposit
-    deposit -= bet.winAmount;
+    bankFund -= bet.winAmount;
+    bet.isActive = false;
 
     emit LogRefund(player, amount);
   }
@@ -136,10 +130,10 @@ contract Casino is Ownable, HouseAdmin {
   /**
    * @dev owner can withdraw the remain ether
    */
-  function withdraw(uint amount) external onlyOwner {
-    require(amount <= address(this).balance - deposit, 'cannot withdraw amount greater than (balance - deposit)');
+  function withdraw(uint _amount) external onlyOwner {
+    require(_amount <= address(this).balance - bankFund, 'cannot withdraw amount greater than (balance - deposit)');
 
-    owner.transfer(amount);
+    owner.transfer(_amount);
   }
 }
  
