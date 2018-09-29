@@ -34,6 +34,7 @@ contract Casino is Ownable, HouseAdmin {
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
   event LogRefund(address indexed addr, uint amount);
+  event LogDealerWithdraw(address indexed addr, uint amount);
 
   constructor() payable public {
     owner = msg.sender;
@@ -134,6 +135,8 @@ contract Casino is Ownable, HouseAdmin {
     require(_amount <= address(this).balance - bankFund, 'cannot withdraw amount greater than (balance - deposit)');
 
     owner.transfer(_amount);
+
+    emit LogDealerWithdraw(owner, _amount);
   }
 }
  
