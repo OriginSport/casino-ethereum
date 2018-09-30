@@ -15,6 +15,14 @@ contract Casino is Ownable, HouseAdmin {
 
   uint constant BET_EXPIRATION_BLOCKS = 250;
 
+  uint constant MAX_MASKABLE_MODULO = 40;
+  uint constant MAX_BET_MASK = 2 ** MAX_MASKABLE_MODULO;
+
+  // population count
+  uint constant POPCOUNT_MULT = 0x0000000000002000000000100000000008000000000400000000020000000001;
+  uint constant POPCOUNT_MASK = 0x0001041041041041041041041041041041041041041041041041041041041041;
+  uint constant POPCOUNT_MODULO = 0x3F;
+
   uint public bankFund;
 
   struct Bet {
@@ -58,7 +66,18 @@ contract Casino is Ownable, HouseAdmin {
       houseEdge = HOUSE_EDGE_MINIMUM_AMOUNT;
     }
 
-    uint winAmount = (amount - houseEdge) * _modulo;
+    uint populationCount;
+    if (_modulo < MAX_MASKABLE_MODULO) {
+      require(_choice < MAX_BET_MASK, "choice too large");
+      populationCount = (_choice * POPCOUNT_MULT & POPCOUNT_MASK) % POPCOUNT_MODULO;
+    } else {
+      require(_choice < _modulo, "choice large than modulo");
+      populationCount = _choice;
+    }
+
+    require(populationCount < _modulo, "winning rate out of range");
+
+    uint winAmount = (amount - houseEdge).mul(_modulo) / populationCount;
     // lock winAmount into this contract. Make sure contract is solvent
     bankFund = bankFund.add(winAmount);
 
@@ -93,11 +112,20 @@ contract Casino is Ownable, HouseAdmin {
 
     uint result = uint(keccak256(abi.encodePacked(_reveal, blockhash(placeBlockNumber)))) % modulo;
 
-    if (choice == result) {
-      winAmount = bet.winAmount;
-      player.transfer(winAmount);
-      emit LogDistributeReward(player, winAmount);
+    if (modulo <= MAX_MASKABLE_MODULO) {
+      if (2 ** result & choice != 0) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
+    } else {
+      if (result < choice) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
     }
+
     // release winAmount deposit
     bankFund -= bet.winAmount;
     bet.isActive = false;
