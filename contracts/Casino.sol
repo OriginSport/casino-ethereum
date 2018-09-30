@@ -7,7 +7,7 @@ import './HouseAdmin.sol';
 contract Casino is Ownable, HouseAdmin {
   using SafeMath for uint;
 
-  uint constant HOUSE_EDGE_PERCENT = 2;
+  uint constant HOUSE_EDGE_PERCENT = 1;
   uint constant HOUSE_EDGE_MINIMUM_AMOUNT = 0.0003 ether;
 
   uint constant BET_AMOUNT_MIN = 0.01 ether;
@@ -70,12 +70,11 @@ contract Casino is Ownable, HouseAdmin {
     if (_modulo < MAX_MASKABLE_MODULO) {
       require(_choice < MAX_BET_MASK, "choice too large");
       populationCount = (_choice * POPCOUNT_MULT & POPCOUNT_MASK) % POPCOUNT_MODULO;
+      require(populationCount < _modulo, "winning rate out of range");
     } else {
       require(_choice < _modulo, "choice large than modulo");
       populationCount = _choice;
     }
-
-    require(populationCount < _modulo, "winning rate out of range");
 
     uint winAmount = (amount - houseEdge).mul(_modulo) / populationCount;
     // lock winAmount into this contract. Make sure contract is solvent
@@ -160,10 +159,8 @@ contract Casino is Ownable, HouseAdmin {
    * @dev owner can withdraw the remain ether
    */
   function withdraw(uint _amount) external onlyOwner {
-    require(_amount <= address(this).balance - bankFund, 'cannot withdraw amount greater than (balance - deposit)');
-
+    require(_amount <= address(this).balance - bankFund, 'cannot withdraw amount greater than (balance - bankFund)');
     owner.transfer(_amount);
-
     emit LogDealerWithdraw(owner, _amount);
   }
 }
