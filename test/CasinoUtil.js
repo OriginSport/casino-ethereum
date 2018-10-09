@@ -8,11 +8,11 @@ function closeBet(reveal, blockHash, module) {
   return{random: '0x' + random.toString(16), result: result.toString()}
 }
 
-const reveal = '0x' + '000000000000000000000000000000000000000000000000000ddee4def596f7'
-const commit = web3.utils.sha3(reveal)
-const blockHash = '0xac62d92f3c1eec9b2574db3a06c6b3cba28628bc4bb47b640e72515eaa9d65d3'
-console.log(commit)
-console.log(closeBet(reveal, blockHash, 2))
+// const reveal = '0x' + '000000000000000000000000000000000000000000000000000ddee4def596f7'
+// const commit = web3.utils.sha3(reveal)
+// const blockHash = '0xac62d92f3c1eec9b2574db3a06c6b3cba28628bc4bb47b640e72515eaa9d65d3'
+// console.log(commit)
+// console.log(closeBet(reveal, blockHash, 2))
 
 function odds(_amount, _choice, _modulo) {
   const HOUSE_EDGE_PERCENT = new BN('1', 10)
@@ -46,4 +46,27 @@ function odds(_amount, _choice, _modulo) {
   return {winAmount, odds, winChance}
 }
 
-console.log(odds('1000000000000000000', '1', '2'))
+// console.log(odds('1000000000000000000', '31', '6'))
+
+
+function binaryChoice(_choice, _select) {
+  let strRes = ''
+  for (let i = 1; i <= _choice; i++) {
+    for (let j = 1; j <= _choice; j++) {
+      strRes = (i + j === _select ? 1 : 0) + strRes
+    }
+  }
+  return strRes
+}
+
+function choice(_choice, _select) {
+  return new BN(binaryChoice(_choice, _select), 2).toString(10)
+}
+console.log(choice(6, 3))
+
+function recurse(lengths, marks, index) {
+  let arr = []
+  if (index === lengths.length) {
+
+  }
+}
