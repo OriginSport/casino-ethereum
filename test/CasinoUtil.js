@@ -1,5 +1,4 @@
 const web3 = require('web3')
-
 const BN = require('bn.js')
 
 function closeBet(reveal, blockHash, module) {
@@ -45,28 +44,8 @@ function odds(_amount, _choice, _modulo) {
   const winChance = populationCount / _modulo
   return {winAmount, odds, winChance}
 }
-
 // console.log(odds('1000000000000000000', '31', '6'))
 
-
-function binaryChoice(_choice, _select) {
-  let strRes = ''
-  for (let i = 1; i <= _choice; i++) {
-    for (let j = 1; j <= _choice; j++) {
-      strRes = (i + j === _select ? 1 : 0) + strRes
-    }
-  }
-  return strRes
-}
-function binaryChoice1(_choice, _times, _select) {
-  let strRes = ''
-  for (let i = 1; i <= _choice; i++) {
-    for (let j = 1; j <= _choice; j++) {
-      strRes = (i + j === _select ? 1 : 0) + strRes
-    }
-  }
-  return strRes
-}
 
 function choice(_choice, _times, _select) {
   let lengths = []
@@ -79,15 +58,13 @@ function choice(_choice, _times, _select) {
   recurse(lengths, marks, 0, _select, strRes)
   return new BN(strRes.join(''), 2).toString(10)
 }
-console.log(choice(2, 1, 2))
+// console.log(choice(2, 1, 2))
 
 function recurse(_lengths, _marks, _index, _result, _strRes) {
   for (let i = 0; i < _lengths[_index]; i++) {
     _marks[_index] = i
     if (_index === _lengths.length - 1) {
       const result = arrSum(_marks, 10) + _lengths.length
-      // _strRes = (_result === result ? '1' : '0') + _strRes
-      // strRes = (_result === result ? 1 : 0) + strRes
       _strRes.unshift(_result === result ? 1 : 0)
     } else {
       recurse(_lengths, _marks, _index + 1, _result, _strRes)
