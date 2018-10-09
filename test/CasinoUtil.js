@@ -84,3 +84,16 @@ function arrSum(arr, ns) {
 }
 
 // console.log(arrSum([10, 10], 2))
+
+function revertChoice(_choice) {
+  let result = []
+  const strRes = _choice.toString(2).split('').reverse()
+  for (let i = 0; i < strRes.length; i++) {
+    if (strRes[i] === '1') {
+      result.push(i)
+    }
+  }
+  return result
+}
+
+console.log(revertChoice(66))
