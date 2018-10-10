@@ -35,7 +35,7 @@ contract Casino is Ownable, HouseAdmin {
     bool isActive;
   }
 
-  mapping (uint => Bet) bets;
+  mapping (uint => Bet) public bets;
 
   event LogParticipant(address indexed player, uint indexed modulo, uint choice, uint amount, uint commit);
   event LogClosedBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
