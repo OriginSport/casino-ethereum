@@ -26,12 +26,12 @@ contract Casino is Ownable, HouseAdmin {
   uint public bankFund;
 
   struct Bet {
-    bool isActive;
     uint8 modulo;
     uint64 choice;
-    uint  amount;
-    uint  winAmount;
-    uint  placeBlockNumber;
+    uint amount;
+    uint winAmount;
+    uint placeBlockNumber;
+    bool isActive;
     address player;
   }
 
