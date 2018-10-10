@@ -136,9 +136,11 @@ contract Casino is Ownable, HouseAdmin {
     Bet storage bet = bets[_commit];
 
     uint amount = bet.amount;
+    uint placeBlockNumber = bet.placeBlockNumber;
     address player = bet.player;
 
     require(bet.isActive, 'this bet is not active');
+    require(block.number > placeBlockNumber + BET_EXPIRATION_BLOCKS, 'this bet has not expired');
 
     player.transfer(amount);
     // release winAmount deposit
