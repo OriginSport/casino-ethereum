@@ -26,13 +26,13 @@ contract Casino is Ownable, HouseAdmin {
   uint public bankFund;
 
   struct Bet {
+    bool isActive;
     uint8 modulo;
-    uint40 choice;
+    uint64 choice;
     uint  amount;
     uint  winAmount;
     uint  placeBlockNumber;
     address player;
-    bool isActive;
   }
 
   mapping (uint => Bet) public bets;
@@ -82,7 +82,7 @@ contract Casino is Ownable, HouseAdmin {
 
     require(bankFund <= address(this).balance, 'contract balance is not enough');
 
-    bet.choice = uint40(_choice);
+    bet.choice = uint64(_choice);
     bet.player = msg.sender;
     bet.placeBlockNumber = block.number;
     bet.amount = amount;
