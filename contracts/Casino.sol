@@ -26,8 +26,8 @@ contract Casino is Ownable, HouseAdmin {
   uint public bankFund;
 
   struct Bet {
-    uint8 choice;
     uint8 modulo;
+    uint40 choice;
     uint  amount;
     uint  winAmount;
     uint  placeBlockNumber;
