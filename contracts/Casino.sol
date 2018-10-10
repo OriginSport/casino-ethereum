@@ -163,5 +163,12 @@ contract Casino is Ownable, HouseAdmin {
     owner.transfer(_amount);
     emit LogDealerWithdraw(owner, _amount);
   }
+
+  /**
+   * @dev get the balance which can be used
+   */
+  function getAvailableBalance() view public returns (uint) {
+    return address(this).balance - bankFund;
+  }
 }
  
