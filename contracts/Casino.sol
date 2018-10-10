@@ -82,7 +82,7 @@ contract Casino is Ownable, HouseAdmin {
 
     require(bankFund <= address(this).balance, 'contract balance is not enough');
 
-    bet.choice = uint8(_choice);
+    bet.choice = uint40(_choice);
     bet.player = msg.sender;
     bet.placeBlockNumber = block.number;
     bet.amount = amount;
@@ -126,7 +126,7 @@ contract Casino is Ownable, HouseAdmin {
     }
 
     // release winAmount deposit
-    bankFund -= bet.winAmount;
+    bankFund = bankFund.sub(bet.winAmount);
     bet.isActive = false;
 
     emit LogClosedBet(player, modulo, choice, _reveal, result, amount, winAmount);
@@ -144,7 +144,7 @@ contract Casino is Ownable, HouseAdmin {
 
     player.transfer(amount);
     // release winAmount deposit
-    bankFund -= bet.winAmount;
+    bankFund = bankFund.sub(bet.winAmount);
     bet.isActive = false;
 
     emit LogRefund(player, amount);
