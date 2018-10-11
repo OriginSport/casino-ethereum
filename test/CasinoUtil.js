@@ -15,7 +15,7 @@ function closeBet(reveal, blockHash, module) {
 
 function odds(_amount, _choice, _modulo) {
   const HOUSE_EDGE_PERCENT = new BN('1', 10)
-  const HOUSE_EDGE_MINIMUM_AMOUNT = new BN('3000000000000000', 10)
+  const HOUSE_EDGE_MINIMUM_AMOUNT = new BN('300000000000000', 10)
 
   // population count
   const POPCOUNT_MULT = new BN('0000000000002000000000100000000008000000000400000000020000000001', 16)
@@ -44,7 +44,7 @@ function odds(_amount, _choice, _modulo) {
   const winChance = populationCount / _modulo
   return {winAmount, odds, winChance}
 }
-console.log(odds('10000000000000000', '6667856664', '36'))
+// console.log(odds('1000000000000000000', '31', '6'))
 
 
 function choice(_choice, _times, _select) {
@@ -59,8 +59,6 @@ function choice(_choice, _times, _select) {
   return new BN(strRes.join(''), 2).toString(10)
 }
 // console.log(choice(2, 1, 2))
-const c = parseInt(choice(6,2,5))+parseInt(choice(6,2,6))+parseInt(choice(6,2,8))+parseInt(choice(6,2,9))
-console.log(c)
 
 function recurse(_lengths, _marks, _index, _result, _strRes) {
   for (let i = 0; i < _lengths[_index]; i++) {
@@ -98,4 +96,4 @@ function revertChoice(_choice) {
   return result
 }
 
-// console.log(revertChoice(66))
+console.log(revertChoice(66))
