@@ -4,57 +4,62 @@ let property = properties.development
 // property = properties.mainnet
 
 const Web3 = require('web3')
-const web3 = new Web3(new Web3.providers.HttpProvider(property.url))
+const web3 = new Web3(property.url)
 
-async function deploy(contractAbi, contractBytecode) {
-  const contract = new web3.eth.Contract(contractAbi)
-  return (await contract.deploy({data: contractBytecode}).send({from: property.from, gasLimit: property.gasLimit}))._address
+async function deploy(_contractAbi, _contractBytecode) {
+  const contract = new web3.eth.Contract(_contractAbi)
+  return await contract.deploy({data: _contractBytecode}).send({from: property.from, gasLimit: property.gasLimit})
 }
 
-async function sendSignedTx(to, data, nonce, value, gasPrice, gasLimit, from, pk) {
-  console.debug('nonce', nonce)
-  console.debug('gasPrice', gasPrice)
-  console.debug('gasLimit', gasLimit)
+async function sendSignedTx(_to, _data, _nonce, _value, _gasPrice, _gasLimit, _from, _pk) {
+  console.debug('nonce', _nonce)
+  console.debug('gasPrice', _gasPrice)
+  console.debug('gasLimit', _gasLimit)
   const rawTx = {
-    nonce: nonce,
-    gasPrice: gasPrice,
-    gasLimit: gasLimit,
-    from: from,
-    to: to,
-    value: value,
-    data: data
+    nonce: _nonce,
+    gasPrice: _gasPrice,
+    gasLimit: _gasLimit,
+    from: _from,
+    to: _to,
+    value: _value,
+    data: _data
   }
-  const signedData = await web3.eth.accounts.signTransaction(rawTx, pk)
-  // console.debug('signedData', signedData)
+  const signedData = await web3.eth.accounts.signTransaction(rawTx, _pk)
 
   return await web3.eth.sendSignedTransaction(signedData.rawTransaction)
     .on('transactionHash', txHash => console.log('txHash', txHash))
     .catch(error => console.error('sendSignedTx error:', error))
 }
 
-async function sendSignedTxHelper(to, data, value, pk) {
-  const from = await web3.eth.accounts.privateKeyToAccount(pk).address
-  const nonce = await web3.eth.getTransactionCount(from)
+async function sendSignedTxHelper(_to, _data, _value, _pk, _nonce) {
+  const from = await web3.eth.accounts.privateKeyToAccount(_pk).address
+  let nonce = await web3.eth.getTransactionCount(from)
+  nonce = _nonce > nonce ? _nonce : nonce
   const gasPrice = await web3.eth.getGasPrice()
-  const gasLimit = data ? await contractEstimateGas(property.from, to, data) : 21000
-  return await sendSignedTx(to, data, nonce, value, gasPrice, gasLimit, from, pk)
+  const gasLimit = _data ? (await estimateGas(from, _to, _data, _value)) * 2 : 21000
+  return await sendSignedTx(_to, _data, nonce, _value, gasPrice, gasLimit, from, _pk)
 }
 
-async function sendSignedTxSimple(to, data) {
-  const nonce = await web3.eth.getTransactionCount(property.from)
+async function sendSignedTxSimple(_to, _data, _nonce) {
+  let nonce = await web3.eth.getTransactionCount(property.from)
+  nonce = _nonce > nonce ? _nonce : nonce
   const gasPrice = await web3.eth.getGasPrice()
-  const gasLimit = data ? (await contractEstimateGas(property.from, to, data)) * 2 : 21000
-  return await sendSignedTx(to, data, nonce, 0, gasPrice, gasLimit, property.from, property.pk)
+  const gasLimit = _data ? (await estimateGas(property.from, _to, _data)) * 2 : 21000
+  return await sendSignedTx(_to, _data, nonce, 0, gasPrice, gasLimit, property.from, property.pk)
 }
 
-async function contractEstimateGas(from, to, data) {
-  return await web3.eth.estimateGas({from: from, to: to, data: data}, function (error, estimateGas) {
-    console.info('estimateGas:', estimateGas)
+async function estimateGas(_from, _to, _data, _value) {
+  return await web3.eth.estimateGas({from: _from, to: _to, value: _value, data: _data}, function (error, result) {
+    if (error) {
+      console.log(error)
+    } else {
+      console.info('estimateGas:', result)
+    }
   })
 }
 
-async function coverTx(nonce, gasPrice, from, pk) {
-  await sendSignedTx(from, '', nonce, 0, gasPrice, 21000, from, pk)
+async function coverTx(_nonce, _gasPrice, _from, _pk) {
+  await sendSignedTx(_from, '', _nonce, 0, _gasPrice, 21000, _from, _pk)
 }
 
 function getString(hexString) {
@@ -82,7 +87,7 @@ module.exports = {
   sendSignedTx: sendSignedTx,
   sendSignedTxHelper: sendSignedTxHelper,
   sendSignedTxSimple: sendSignedTxSimple,
-  contractEstimateGas: contractEstimateGas,
+  contractEstimateGas: estimateGas,
   coverTx: coverTx,
   getString: getString,
   getBytes: getBytes,
