@@ -51,7 +51,7 @@ contract HouseAdmin is Ownable {
    * @param _newCroupier The address to transfer croupiership to
    */
   function transferCroupier(address _newCroupier) public onlyCroupier {
-    _transferSigner(_newCroupier);
+    _transferCroupier(_newCroupier);
   }
 
   /**
