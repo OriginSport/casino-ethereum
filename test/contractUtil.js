@@ -1,6 +1,6 @@
 const properties = require('./properties.js')
 let property = properties.development
-// property = properties.ropsten
+property = properties.ropsten
 // property = properties.mainnet
 
 const Web3 = require('web3')
@@ -49,6 +49,9 @@ async function sendSignedTxSimple(_to, _data, _nonce) {
 }
 
 async function estimateGas(_from, _to, _data, _value) {
+  if (!_value) {
+    _value = 0
+  }
   return await web3.eth.estimateGas({from: _from, to: _to, value: _value, data: _data}, function (error, result) {
     if (error) {
       console.log(error)
@@ -87,7 +90,7 @@ module.exports = {
   sendSignedTx: sendSignedTx,
   sendSignedTxHelper: sendSignedTxHelper,
   sendSignedTxSimple: sendSignedTxSimple,
-  contractEstimateGas: estimateGas,
+  estimateGas: estimateGas,
   coverTx: coverTx,
   getString: getString,
   getBytes: getBytes,
