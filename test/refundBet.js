@@ -1,12 +1,16 @@
-const {web3, property, sendSignedTxSimple} = require('./contractUtil.js')
+const {web3, property, sendSignedTxHelper} = require('./contractUtil.js')
 const {getEvents} = require('./eventUtil')
 
 const contractJson = require('../build/contracts/Casino.json')
-const contractAbi = contractJson.abi
 const contractAddr = contractJson.networks[property.networkID].address
-const contract = new web3.eth.Contract(contractAbi, contractAddr)
+const contract = new web3.eth.Contract(contractJson.abi, contractAddr)
 
+const ownerPk = property.pk
+const owner = property.from
 let nonce = 0
+
+let frozenBan = 0
+let counter = 0
 
 async function autoRefundBet() {
   const transactionHash = contractJson.networks[property.networkID].transactionHash
@@ -15,7 +19,6 @@ async function autoRefundBet() {
   console.log('fromBlock', fromBlock)
 
   const expirationBlocks = 250
-  const manualCloseBlocks = 12
   const logParticipant = events.LogParticipant
   const blockNumber = await web3.eth.getBlockNumber()
   web3.eth.getPastLogs({fromBlock: fromBlock, address: contractAddr, topics: [logParticipant.signature]})
@@ -29,21 +32,15 @@ async function autoRefundBet() {
             } else {
               const isActive = result.isActive
               if (isActive) {
-                console.log(result)
                 const placeBlockNumber = parseInt(result.placeBlockNumber)
-                // refund bet which is expired
-                // manual close bet which hasn't been close auto
                 if (blockNumber > placeBlockNumber + expirationBlocks) {
+                  // refund bet which is expired
+                  frozenBan += parseInt(result.amount)
+                  console.log(counter++, frozenBan)
                   const data = contract.methods.refundBet(commit).encodeABI()
-                  const currNonce = await web3.eth.getTransactionCount(property.from)
+                  const currNonce = await web3.eth.getTransactionCount(owner)
                   nonce = nonce > currNonce ? nonce : currNonce
-                  await sendSignedTxSimple(contractAddr, data, nonce++)
-                } else if (blockNumber > placeBlockNumber + manualCloseBlocks) {
-                  const reveal = getReveal(commit)
-                  const data = contract.methods.closeBet(reveal).encodeABI()
-                  const currNonce = await web3.eth.getTransactionCount(property.from)
-                  nonce = nonce > currNonce ? nonce : currNonce
-                  await sendSignedTxSimple(contractAddr, data, nonce++)
+                  await sendSignedTxHelper(contractAddr, data, null, ownerPk, nonce++)
                 }
               }
             }
@@ -51,22 +48,11 @@ async function autoRefundBet() {
       }
     })
 }
-const reveals = {}
-const commits = []
-
-const rs = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-for (let i = 0; i < rs.length; i++) {
-  const commit = web3.utils.soliditySha3(rs[i])
-  reveals[commit] = rs[i]
-  commits[i] = commit
-}
-
-
-function getReveal(_commit) {
-  return reveals[_commit]
-}
 
 async function test() {
+  web3.eth.getBalance(contractAddr).then(data => console.log('ban before', data))
   await autoRefundBet()
+  web3.eth.getBalance(contractAddr).then(data => console.log('ban after', data))
+
 }
 test()
