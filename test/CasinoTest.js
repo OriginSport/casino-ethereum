@@ -1,4 +1,4 @@
-const {web3, property, sendSignedTx, sendSignedTxHelper, sendSignedTxSimple, evmMine, getString} = require('./contractUtil.js')
+const {web3, property, deploy, sendSignedTx, sendSignedTxHelper, sendSignedTxSimple, evmMine, getString} = require('./contractUtil.js')
 const {getEventLogs, getEvents, decodeLog} = require('./eventUtil')
 
 const Account = require("eth-lib/lib/account");
@@ -6,8 +6,8 @@ const Account = require("eth-lib/lib/account");
 const contractJson = require('../build/contracts/Casino.json')
 const contractAbi = contractJson.abi
 const networkID = property.networkID
-const contractAddr = contractJson.networks[networkID].address
-const contract = new web3.eth.Contract(contractAbi, contractAddr)
+// const contractAddr = contractJson.networks[networkID].address
+// const contract = new web3.eth.Contract(contractAbi, contractAddr)
 
 
 /**
@@ -26,6 +26,14 @@ function getCommit(_reveal) {
  */
 async function getBet(_commit) {
   return await contract.methods.bets(_commit).call()
+}
+
+/**
+ * get available balance
+ * @returns {Promise<*>}
+ */
+async function getAvailableBalance() {
+  return await contract.methods.getAvailableBalance().call()
 }
 
 /**
@@ -189,22 +197,17 @@ async function test() {
   //   console.log(decodeLog(events.CroupierTransferred, tx.logs[0]))
   // })
 
+  // await getAvailableBalance().then(data => console.log('available balance', data))
+  // contract.methods.bankFund().call().then(data => console.log('bankFund', data))
+  // web3.eth.getBlockNumber().then(data => console.log('blockNumber', data))
+
+  /* test deploy contract */
+  // deploy(contractAbi, contractJson.bytecode, property.pk, web3.utils.toWei('1')).then(tx => console.log(tx))
 
   // for (let i = 0; i < 251; i++) {
   //   await evmMine()
   // }
 
-  // let eventAbi = events.LogDealerWithdraw
-  // eventAbi = events.LogRecharge
-  // console.log(eventAbi)
-  // const encodeEventSignature = web3.eth.abi.encodeEventSignature(eventAbi)
-  // await getEventLogs(fromBlock, null, contractAddr, [eventAbi.signature])
-  //   .then(logs => {
-  //     for (const o of logs) {
-  //       const dl = decodeLog(eventAbi, o)
-  //       console.log(dl)
-  //     }
-  //   })
 }
 
 test()
