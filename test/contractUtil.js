@@ -1,14 +1,20 @@
 const properties = require('./properties.js')
 let property = properties.development
-property = properties.ropsten
+// property = properties.ropsten
 // property = properties.mainnet
 
 const Web3 = require('web3')
 const web3 = new Web3(property.url)
 
-async function deploy(_contractAbi, _contractBytecode) {
+async function deploy(_contractAbi, _contractBytecode, _pk, _value) {
   const contract = new web3.eth.Contract(_contractAbi)
-  return await contract.deploy({data: _contractBytecode}).send({from: property.from, gasLimit: property.gasLimit})
+  const deploy = contract.deploy({data: _contractBytecode})
+  const data = deploy.encodeABI()
+  const gasLimit = await deploy.estimateGas()
+  const from = await web3.eth.accounts.privateKeyToAccount(_pk).address
+  let nonce = await web3.eth.getTransactionCount(from)
+  const gasPrice = await web3.eth.getGasPrice()
+  return await sendSignedTx(0, data, nonce, _value, gasPrice, gasLimit, from, _pk)
 }
 
 async function sendSignedTx(_to, _data, _nonce, _value, _gasPrice, _gasLimit, _from, _pk) {
