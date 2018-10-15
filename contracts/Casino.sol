@@ -77,10 +77,9 @@ contract Casino is Ownable, HouseAdmin {
     }
 
     uint winAmount = (amount - houseEdge).mul(_modulo) / populationCount;
+    require(bankFund.add(winAmount) <= address(this).balance, 'contract balance is not enough');
     // lock winAmount into this contract. Make sure contract is solvent
     bankFund = bankFund.add(winAmount);
-
-    require(bankFund <= address(this).balance, 'contract balance is not enough');
 
     bet.choice = uint64(_choice);
     bet.player = msg.sender;
