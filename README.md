@@ -2,6 +2,36 @@
 
 This is a smart contract about a casino game contract based on ethereum
 
+## About the game
+
+### How to generate a random number?
+
+Actually, generate a random number on ethereum is not a easy thing, but
+after many appempts and explorations by different developers, we could do this.
+
+Maybe there are some other ways to generate random number, for simplicity, i will
+just show the code how we generate a random number.
+
+```
+const reveal = web3.utils.randomHex(32)
+const commit = web3.utils.soliditySha3(reveal)
+```
+
+Then push the `commit` to ethereum by a transaction, and get a blockHash or that block.
+
+```
+const randomNumber = web3.utils.soliditySha3(reveal, blockHash)
+```
+The `randomNumber` is the final random number.
+
+### The random number is random enough?
+
+To be honestly, i can not tell that right now(maybe some days later).
+
+But i could supply some statistic data, and specific frequency count.
+
+![block_reveal_result]('./block_reveal_result.png')
+
 ## Dependencies
 1. nodejs, and make sure it's version above 8.0.0
 2. npm
