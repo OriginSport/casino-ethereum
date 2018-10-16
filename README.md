@@ -28,9 +28,13 @@ The `randomNumber` is the final random number.
 
 To be honestly, i can not tell that right now(maybe some days later).
 
-But i could supply some statistic data, and specific frequency count.
+But i could supply some statistic data(100 000 rows data), and specific frequency count.
 
-![block_reveal_result]('./block_reveal_result.png')
+| blockNumber | blockHash | reveal | randomNumber | modulo2 | modulo6 | modulo36 | modulo 100 |
+
+![block_reveal_result](block_reveal_result.png)
+
+
 
 ## Dependencies
 1. nodejs, and make sure it's version above 8.0.0
