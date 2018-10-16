@@ -1,5 +1,6 @@
 const properties = require('./properties.js')
 let property = properties.development
+property = properties.rinkeby
 // property = properties.ropsten
 // property = properties.mainnet
 
