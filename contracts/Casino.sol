@@ -39,9 +39,9 @@ contract Casino is Ownable, HouseAdmin {
 
   event LogParticipant(address indexed player, uint indexed modulo, uint choice, uint amount, uint commit);
   event LogClosedBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
+  event LogRefund(address indexed addr, uint amount, uint commit);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
-  event LogRefund(address indexed addr, uint amount);
   event LogDealerWithdraw(address indexed addr, uint amount);
 
   constructor() payable public {
@@ -146,7 +146,7 @@ contract Casino is Ownable, HouseAdmin {
     bankFund = bankFund.sub(bet.winAmount);
     bet.isActive = false;
 
-    emit LogRefund(player, amount);
+    emit LogRefund(player, amount, _commit);
   }
 
   /**
