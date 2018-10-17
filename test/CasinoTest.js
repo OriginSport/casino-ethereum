@@ -6,8 +6,8 @@ const Account = require("eth-lib/lib/account");
 const contractJson = require('../build/contracts/Casino.json')
 const contractAbi = contractJson.abi
 const networkID = property.networkID
-// const contractAddr = contractJson.networks[networkID].address
-// const contract = new web3.eth.Contract(contractAbi, contractAddr)
+const contractAddr = contractJson.networks[networkID].address
+const contract = new web3.eth.Contract(contractAbi, contractAddr)
 
 
 /**
@@ -63,6 +63,30 @@ async function placeBet(_value, _choice, _modulo, _expiredBlockNumber, _commit, 
 async function closeBet(_reveal, _pk) {
   const data = contract.methods.closeBet(_reveal).encodeABI()
   return await sendSignedTxHelper(contractAddr, data, null, _pk)
+}
+
+/**
+ * close bet which is active and expired
+ * @param _reveal bet secret key provide by croupier
+ * @param _blockHash  blockHash of placeBetNumber
+ * @param _pk private key of croupier account
+ * @returns {Promise<*>}
+ */
+async function closeExpiredBet(_reveal, _blockHash, _pk) {
+  const data = contract.methods.closeExpiredBet(_reveal, _blockHash).encodeABI()
+  return await sendSignedTxHelper(contractAddr, data, null, _pk)
+}
+
+/**
+ * get blockHash of placeBetNumber by reveal
+ * @param _reveal bet secret key provide by croupier
+ * @returns {Promise<*>}
+ */
+async function getBlockHash(_reveal) {
+  const bet = await getBet(getCommit(_reveal))
+  if (bet.placeBlockNumber !== '0') {
+    return (await web3.eth.getBlock(bet.placeBlockNumber)).hash
+  }
 }
 
 /**
@@ -139,7 +163,7 @@ function getSignature(_expiredBlockNumber, _commit, _pk) {
 
 async function test() {
   const reveals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-  let reveal = reveals[6]
+  let reveal = reveals[1]
   let commit = getCommit(reveal)
 
   const playerPk = property.pk
@@ -171,6 +195,14 @@ async function test() {
   // await closeBet(reveal, croupierPk).then(tx => {
   //   const logs = tx.logs
   //   console.log(decodeLog(events.LogClosedBet, logs[logs.length - 1]))
+  // })
+
+  /* test closeExpiredBet */
+  // const blockHash = await getBlockHash(reveal)
+  // console.log('blockHash', blockHash)
+  // await closeExpiredBet(reveal, blockHash, croupierPk).then(tx => {
+  //   const logs = tx.logs
+  //   console.log(decodeLog(events.LogClosedExpiredBet, logs[logs.length - 1]))
   // })
 
   // await refundBet(commit, croupierPk).then(tx => {
@@ -207,6 +239,18 @@ async function test() {
   // for (let i = 0; i < 251; i++) {
   //   await evmMine()
   // }
+
+  // let counter = 0
+  // const event = events.LogParticipant
+  // getEventLogs(fromBlock, null, contractAddr, [event.signature]).then(async logs => {
+  //   for (const log of logs) {
+  //     web3.eth.getTransaction(log.transactionHash).then(tx => {
+  //       if (log.blockHash !== tx.blockHash) {
+  //         console.log(log.blockHash , tx.blockHash)
+  //       }
+  //     })
+  //   }
+  // })
 
 }
 
