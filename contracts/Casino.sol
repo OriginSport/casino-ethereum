@@ -39,6 +39,7 @@ contract Casino is Ownable, HouseAdmin {
 
   event LogParticipant(address indexed player, uint indexed modulo, uint choice, uint amount, uint commit);
   event LogClosedBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
+  event LogClosedExpiredBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
   event LogRefund(address indexed addr, uint amount, uint commit);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
@@ -129,6 +130,44 @@ contract Casino is Ownable, HouseAdmin {
     bet.isActive = false;
 
     emit LogClosedBet(player, modulo, choice, _reveal, result, amount, winAmount);
+  }
+
+  function closeExpiredBet(uint _reveal, bytes32 _blockHash) external onlyCroupier {
+    uint commit = uint(keccak256(abi.encodePacked(_reveal)));
+    Bet storage bet = bets[commit];
+
+    require(bet.isActive, 'this bet is not active');
+
+    uint amount = bet.amount;
+    uint placeBlockNumber = bet.placeBlockNumber;
+    uint modulo = bet.modulo;
+    uint winAmount = 0;
+    uint choice = bet.choice;
+    address player = bet.player;
+
+    require(block.number > placeBlockNumber + BET_EXPIRATION_BLOCKS, 'this bet has not expired');
+
+    uint result = uint(keccak256(abi.encodePacked(_reveal, _blockHash))) % modulo;
+
+    if (modulo <= MAX_MASKABLE_MODULO) {
+      if (2 ** result & choice != 0) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
+    } else {
+      if (result < choice) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
+    }
+
+    // release winAmount deposit
+    bankFund = bankFund.sub(bet.winAmount);
+    bet.isActive = false;
+
+    emit LogClosedExpiredBet(player, modulo, choice, _reveal, result, amount, winAmount);
   }
 
   function refundBet(uint _commit) external onlyCroupier {
