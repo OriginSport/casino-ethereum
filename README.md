@@ -32,11 +32,21 @@ But i could supply some statistic data(100 000 rows data), and specific frequenc
 
 | blockNumber | blockHash | reveal | randomNumber | modulo2 | modulo6 | modulo36 | modulo 100 |
 
-![block_reveal_result](block_reveal_result.png)
+![block_reveal_result](images/block_reveal_result.png)
 
+You can get the source data in `block_reveal_modulo_result.csv`, there are some statistic image about each modulo.
+
+![modulo2](images/modulo2.png)
+
+![modulo6](images/modulo6.png)
+
+![modulo36](images/modulo36.png)
+
+![modulo100](images/modulo100.png)
 
 
 ## Dependencies
+
 1. nodejs, and make sure it's version above 8.0.0
 2. npm
 3. truffle
