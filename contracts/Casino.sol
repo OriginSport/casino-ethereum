@@ -170,7 +170,7 @@ contract Casino is Ownable, HouseAdmin {
     emit LogClosedExpiredBet(player, modulo, choice, _reveal, result, amount, winAmount);
   }
 
-  function refundBet(uint _commit) external onlyCroupier {
+  function refundBet(uint _commit) external {
     Bet storage bet = bets[_commit];
 
     uint amount = bet.amount;
@@ -211,4 +211,3 @@ contract Casino is Ownable, HouseAdmin {
     return address(this).balance - bankFund;
   }
 }
- 
