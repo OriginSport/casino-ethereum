@@ -72,3 +72,5 @@ ttsdk
 
 # truffle
 truffle-config.js
+
+test\propertyConfig.js
