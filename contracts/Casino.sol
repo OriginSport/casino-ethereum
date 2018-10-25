@@ -49,7 +49,7 @@ contract Casino is Ownable, HouseAdmin {
     owner = msg.sender;
   }
 
-  function placeBet(uint _choice, uint _modulo, uint _expiredBlockNumber, uint _commit, uint8 _v, bytes32 _r, bytes32 _s) payable external {
+  function placeBet(uint _choice, uint8 _modulo, uint _expiredBlockNumber, uint _commit, uint8 _v, bytes32 _r, bytes32 _s) payable external {
     Bet storage bet = bets[_commit];
 
     uint amount = msg.value;
@@ -88,7 +88,7 @@ contract Casino is Ownable, HouseAdmin {
     bet.amount = amount;
     bet.winAmount = winAmount;
     bet.isActive = true;
-    bet.modulo = uint8(_modulo);
+    bet.modulo = _modulo;
 
     emit LogParticipant(msg.sender, _modulo, _choice, amount, _commit);
   }
