@@ -14,6 +14,11 @@ const defaultConfig = {
       port: 8546,
       network_id: 1337
     },
+    rinkeby: {
+      host: "1.2.3.4",
+      port: 8545,
+      network_id: 4
+    },
     ropsten: {
       host: "1.2.3.4",
       port: 8545,

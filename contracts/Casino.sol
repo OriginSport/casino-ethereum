@@ -39,16 +39,17 @@ contract Casino is Ownable, HouseAdmin {
 
   event LogParticipant(address indexed player, uint indexed modulo, uint choice, uint amount, uint commit);
   event LogClosedBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
+  event LogClosedExpiredBet(address indexed player, uint indexed modulo, uint choice, uint reveal, uint result, uint amount, uint winAmount);
+  event LogRefund(address indexed addr, uint amount, uint commit);
   event LogDistributeReward(address indexed addr, uint reward);
   event LogRecharge(address indexed addr, uint amount);
-  event LogRefund(address indexed addr, uint amount);
   event LogDealerWithdraw(address indexed addr, uint amount);
 
   constructor() payable public {
     owner = msg.sender;
   }
 
-  function placeBet(uint _choice, uint _modulo, uint _expiredBlockNumber, uint _commit, uint8 _v, bytes32 _r, bytes32 _s) payable external {
+  function placeBet(uint _choice, uint8 _modulo, uint _expiredBlockNumber, uint _commit, uint8 _v, bytes32 _r, bytes32 _s) payable external {
     Bet storage bet = bets[_commit];
 
     uint amount = msg.value;
@@ -87,7 +88,7 @@ contract Casino is Ownable, HouseAdmin {
     bet.amount = amount;
     bet.winAmount = winAmount;
     bet.isActive = true;
-    bet.modulo = uint8(_modulo);
+    bet.modulo = _modulo;
 
     emit LogParticipant(msg.sender, _modulo, _choice, amount, _commit);
   }
@@ -131,7 +132,45 @@ contract Casino is Ownable, HouseAdmin {
     emit LogClosedBet(player, modulo, choice, _reveal, result, amount, winAmount);
   }
 
-  function refundBet(uint _commit) external onlyCroupier {
+  function closeExpiredBet(uint _reveal, bytes32 _blockHash) external onlyCroupier {
+    uint commit = uint(keccak256(abi.encodePacked(_reveal)));
+    Bet storage bet = bets[commit];
+
+    require(bet.isActive, 'this bet is not active');
+
+    uint amount = bet.amount;
+    uint placeBlockNumber = bet.placeBlockNumber;
+    uint modulo = bet.modulo;
+    uint winAmount = 0;
+    uint choice = bet.choice;
+    address player = bet.player;
+
+    require(block.number > placeBlockNumber + BET_EXPIRATION_BLOCKS, 'this bet has not expired');
+
+    uint result = uint(keccak256(abi.encodePacked(_reveal, _blockHash))) % modulo;
+
+    if (modulo <= MAX_MASKABLE_MODULO) {
+      if (2 ** result & choice != 0) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
+    } else {
+      if (result < choice) {
+        winAmount = bet.winAmount;
+        player.transfer(winAmount);
+        emit LogDistributeReward(player, winAmount);
+      }
+    }
+
+    // release winAmount deposit
+    bankFund = bankFund.sub(bet.winAmount);
+    bet.isActive = false;
+
+    emit LogClosedExpiredBet(player, modulo, choice, _reveal, result, amount, winAmount);
+  }
+
+  function refundBet(uint _commit) external {
     Bet storage bet = bets[_commit];
 
     uint amount = bet.amount;
@@ -146,7 +185,7 @@ contract Casino is Ownable, HouseAdmin {
     bankFund = bankFund.sub(bet.winAmount);
     bet.isActive = false;
 
-    emit LogRefund(player, amount);
+    emit LogRefund(player, amount, _commit);
   }
 
   /**
@@ -172,4 +211,3 @@ contract Casino is Ownable, HouseAdmin {
     return address(this).balance - bankFund;
   }
 }
- 
