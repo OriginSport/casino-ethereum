@@ -24,6 +24,8 @@ const randomNumber = web3.utils.soliditySha3(reveal, blockHash)
 ```
 The `randomNumber` is the final random number.
 
+The way to generate random number was inspired by [Dice2Win](https://github.com/dice2-win/contracts/blob/master/Dice2Win.sol)
+
 ### The random number is random enough?
 
 To be honestly, i can not tell that right now(maybe some days later).
